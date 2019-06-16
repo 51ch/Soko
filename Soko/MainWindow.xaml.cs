@@ -61,9 +61,13 @@ namespace Soko
         public MainWindow()
         {
             InitializeComponent();
+            //CreateNewGame(new Map(8, 8)); //создать новую игру с тестовой картой
+            CreateNewGame(new Map(LoadMap())); //создать новую игру с загруженной картой
+        }
+        private void CreateNewGame(Map newMap)
+        {
             FieldGrid = new UniformGrid(); //сетка тайлов игровой карты
-            currentMap = new Map(8, 8); //тестовый объект игровой логики
-            //currentMap = new Map(LoadMap()); //объект игровой логики
+            currentMap = newMap; //объект игровой логики
             cellSize = CalculateCellSize(); //размер клеток, тайлов, персонажей
 
             //Создание кистей
@@ -169,8 +173,8 @@ namespace Soko
             scene.Children.Add(rect_Player_Blue);
 
             //Копирование текущих координат игровых объектов
-            xPos_Player_Red = currentMap.playerRed.xPos*cellSize;
-            yPos_Player_Red= currentMap.playerRed.yPos*cellSize;
+            xPos_Player_Red = currentMap.playerRed.xPos * cellSize;
+            yPos_Player_Red = currentMap.playerRed.yPos * cellSize;
             xPos_Player_Blue = currentMap.playerBlue.xPos * cellSize;
             yPos_Player_Blue = currentMap.playerBlue.yPos * cellSize;
             xPos_Chest_Red = currentMap.chestRed.xPos * cellSize;
@@ -183,13 +187,13 @@ namespace Soko
             frameCount = 9; //Количество кадров анимации
             fps = 30; //Количество обновлений объектов рендера в секунду
             //gameSpeed = 3; //Скорость перемещения объектов по полю
-            gameSpeed = 1+ (int)(cellSize/fps); //Скорость перемещения объектов по полю
+            gameSpeed = 1 + (int)(cellSize / fps); //Скорость перемещения объектов по полю
 
 
             //Создание таймера, который запускает эвент с определенным интервалом
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 1000/fps);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 1000 / fps);
             dispatcherTimer.Start();
 
         }
@@ -405,7 +409,8 @@ namespace Soko
                 &&(currentMap.chestBlue.currentState == Creature.State.Idle))
             {
                 MessageBox.Show("Обе коробки доставлены! Поздравляем! Вы прошли карту!");
-                this.Close(); //Закрыть игру или вместо этого запустить новую карту
+                //this.Close(); //Закрыть игру или вместо этого запустить новую карту
+                CreateNewGame(new Map(LoadMap()));
             }
             //Если состояние игрока/сундука == "в движении", то изменять координаты ректангла в сторону движения
             if (currentMap.playerRed.currentState==Creature.State.Moving)
