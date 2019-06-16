@@ -56,8 +56,6 @@ namespace Soko
         int frameCount;
         int gameSpeed;
         int fps;
-        double charH;
-        double charW;
         public MainWindow()
         {
             InitializeComponent();
@@ -112,17 +110,14 @@ namespace Soko
             rect_Chest_Red.Fill = ib_Chest_Red;
             rect_Chest_Blue.Fill = ib_Chest_Blue;
 
-            //Размеры viewBox или размеры спрайта
-            charH = 64; //высота спрайта
-            charW = 64; //ширина спрайта
             //Настройки кисти для анимации Красного Игрока
             currentRow_P1 = 0;
             currentFrame_P1 = 0;
             ib_Player_Red.AlignmentX = AlignmentX.Left;
             ib_Player_Red.AlignmentY = AlignmentY.Top;
             ib_Player_Red.Stretch = Stretch.UniformToFill;
-            ib_Player_Red.ViewboxUnits = BrushMappingMode.Absolute;
-            ib_Player_Red.Viewbox = new Rect(charW * currentFrame_P1, charH * currentRow_P1, charW * (currentFrame_P1 + 1), charH * (currentRow_P1 + 1));
+            ib_Player_Red.ViewboxUnits = BrushMappingMode.RelativeToBoundingBox;
+            ib_Player_Red.Viewbox = new Rect(1.0/9 * currentFrame_P1, 1.0/4 * currentRow_P1, 1.0/9, 1.0/4);
             rect_Player_Red.Fill = ib_Player_Red;
 
             //Настройки кисти для анимации Синего игрока
@@ -131,8 +126,8 @@ namespace Soko
             ib_Player_Blue.AlignmentX = AlignmentX.Left;
             ib_Player_Blue.AlignmentY = AlignmentY.Top;
             ib_Player_Blue.Stretch = Stretch.UniformToFill;
-            ib_Player_Blue.ViewboxUnits = BrushMappingMode.Absolute;
-            ib_Player_Blue.Viewbox = new Rect(charW * currentFrame_P2, charH * currentRow_P2, charW * (currentFrame_P2 + 1), charH * (currentRow_P2 + 1));
+            ib_Player_Blue.ViewboxUnits = BrushMappingMode.RelativeToBoundingBox;
+            ib_Player_Blue.Viewbox = new Rect(1.0 / 9 * currentFrame_P2, 1.0/4*currentRow_P2, 1.0/9, 1.0/4);
             rect_Player_Blue.Fill = ib_Player_Blue;
 
             //Создание сетки и заполнение тайлами
@@ -185,7 +180,7 @@ namespace Soko
 
             //Настройки анимации
             frameCount = 9; //Количество кадров анимации
-            fps = 30; //Количество обновлений объектов рендера в секунду
+            fps = 60; //Количество обновлений объектов рендера в секунду
             //gameSpeed = 3; //Скорость перемещения объектов по полю
             gameSpeed = 1 + (int)(cellSize / fps); //Скорость перемещения объектов по полю
 
@@ -531,8 +526,8 @@ namespace Soko
             rect_Chest_Blue.RenderTransform = new TranslateTransform(xPos_Chest_Blue, yPos_Chest_Blue);
 
             //Изменение кадра анимации на основе номера строки и номера столбца
-            ib_Player_Red.Viewbox = new Rect(charW * currentFrame_P1, charH * currentRow_P1, charW * (currentFrame_P1 + 1), charH * (currentRow_P1 + 1));
-            ib_Player_Blue.Viewbox = new Rect(charW * currentFrame_P2, charH * currentRow_P2, charW * (currentFrame_P2 + 1), charH * (currentRow_P2 + 1));
+            ib_Player_Red.Viewbox = new Rect(1.0 / 9 * currentFrame_P1, 1.0 / 4 * currentRow_P1, 1.0 / 9, 1.0 / 4);
+            ib_Player_Blue.Viewbox = new Rect(1.0 / 9 * currentFrame_P2, 1.0 / 4 * currentRow_P2, 1.0 / 9, 1.0 / 4);
             rect_Player_Red.Fill = ib_Player_Red;
             rect_Player_Blue.Fill = ib_Player_Blue;
         }
