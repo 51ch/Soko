@@ -85,15 +85,13 @@ namespace Soko
             GetCell(23, 3).Type = Cell.cellType.RedFinish;
             GetCell(23, 4).Type = Cell.cellType.BlueFinish;
         }
-        public Cell GetCell(int x, int y)
+        public Cell GetCell(int x, int y) //возвращает клетку, которая имеет следующие координаты
         {
             return grid.Find(z => z.xPos == x && z.yPos == y);
         }
-        public Cell GetFinishCell(Cell.cellType fincolor)
-        {
-            return grid.Find(z => z.Type == fincolor);
-        }
-        public Cell GetNearCell(Cell currentCell, Creature.Direction direction)
+
+        public Cell GetNearCell(Cell currentCell, Creature.Direction direction) 
+            //возвращает клетку, которая находится в выбранном направлении от текущей клетки
         {
             switch(direction)
             {
@@ -110,20 +108,21 @@ namespace Soko
             }
         }
         public void MoveTo(Creature player, Creature.Direction direction)
+            //перемещает игрока в выбранном направлении
         {
             Cell currentCell = GetCell(player.xPos, player.yPos);
             Cell nextCell = GetNearCell(currentCell, direction);
 
-            if ((nextCell != null)&&(player.currentState!=Creature.State.Moving))
+            if ((nextCell != null)&&(player.currentState!=Creature.State.Moving)) // если следующая клетка существует и игрок не двигается, то...
             {
                 if ((nextCell.Type == Cell.cellType.Open) || 
                     (nextCell.Type == Cell.cellType.RedFinish)||
                     (nextCell.Type == Cell.cellType.BlueFinish))
                 {
-                    if (nextCell.isBusy)
+                    if (nextCell.isBusy) //если следующая клетка занята кем-то, то переместить его в том же направлении
                     {
-                        MoveTo(nextCell.getObject(), direction);
-                        if(!nextCell.isBusy)
+                        MoveTo(nextCell.getObject(), direction); //запустить функцию перемещения для объекта, стоящего на следующей клетке
+                        if(!nextCell.isBusy) //если после смещения объекта со следующей клетки она освободилась, то спокойно перемещаемся на нее
                         {
                             player.MovingTo(direction);
                             nextCell.setObject(player);
@@ -132,13 +131,13 @@ namespace Soko
                             currentCell.clearCell();
                         }
                     }
-                    else
+                    else //если свободна, то спокойно перемещаемся
                     {
-                        player.MovingTo(direction);
-                        nextCell.setObject(player);
-                        player.xPos = nextCell.xPos;
+                        player.MovingTo(direction); //записать в информацию игрока направление его движения и состояние движения
+                        nextCell.setObject(player); //записать игрока в следующую клетку
+                        player.xPos = nextCell.xPos; //записать координаты следующей клетки в координаты игрока
                         player.yPos = nextCell.yPos;
-                        currentCell.clearCell();
+                        currentCell.clearCell(); //освободить текущую клетку
                     }
                 }
             }

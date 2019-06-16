@@ -27,6 +27,8 @@ namespace Soko
         ImageBrush ib_CloseCell;
         ImageBrush ib_OpenCell;
         ImageBrush ib_DeadEndCell;
+        ImageBrush ib_RedFinish;
+        ImageBrush ib_BlueFinish;
         ImageBrush ib_Player_Red;
         ImageBrush ib_Player_Blue;
         ImageBrush ib_Chest_Red;
@@ -59,14 +61,17 @@ namespace Soko
         public MainWindow()
         {
             InitializeComponent();
-            FieldGrid = new UniformGrid();
-            currentMap = new Map(LoadMap());
-            cellSize = CalculateCellSize();
+            FieldGrid = new UniformGrid(); //сетка тайлов игровой карты
+            currentMap = new Map(8, 8); //тестовый объект игровой логики
+            //currentMap = new Map(LoadMap()); //объект игровой логики
+            cellSize = CalculateCellSize(); //размер клеток, тайлов, персонажей
 
             //Создание кистей
             ib_CloseCell = new ImageBrush();
             ib_OpenCell = new ImageBrush();
             ib_DeadEndCell = new ImageBrush();
+            ib_RedFinish = new ImageBrush();
+            ib_BlueFinish = new ImageBrush();
             ib_Player_Red = new ImageBrush();
             ib_Player_Blue = new ImageBrush();
             ib_Chest_Red = new ImageBrush();
@@ -82,6 +87,8 @@ namespace Soko
             ib_CloseCell.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/tiles/wall.jpg", UriKind.Absolute));
             ib_OpenCell.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/tiles/floor.jpg", UriKind.Absolute));
             ib_DeadEndCell.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/tiles/floor_stop.jpg", UriKind.Absolute));
+            ib_RedFinish.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/tiles/floor_stop.jpg", UriKind.Absolute));
+            ib_BlueFinish.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/tiles/floor_stop.jpg", UriKind.Absolute));
             ib_Player_Red.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/sprites/char_red.png", UriKind.Absolute));
             ib_Player_Blue.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/sprites/char_blue.png", UriKind.Absolute));
             ib_Chest_Red.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/sprites/chest_red.png", UriKind.Absolute));
@@ -140,6 +147,14 @@ namespace Soko
                 {
                     rect.Fill = ib_DeadEndCell;
                 }
+                else if (cell.Type == Cell.cellType.RedFinish)
+                {
+                    rect.Fill = ib_RedFinish;
+                }
+                else if (cell.Type == Cell.cellType.BlueFinish)
+                {
+                    rect.Fill = ib_BlueFinish;
+                }
                 else
                 {
                     rect.Fill = ib_CloseCell;
@@ -165,9 +180,11 @@ namespace Soko
 
 
             //Настройки анимации
-            gameSpeed = 3; //Скорость перемещения объектов по полю
             frameCount = 9; //Количество кадров анимации
-            fps = 9; //Количество обновлений объектов рендера в секунду
+            fps = 30; //Количество обновлений объектов рендера в секунду
+            //gameSpeed = 3; //Скорость перемещения объектов по полю
+            gameSpeed = 1+ (int)(cellSize/fps); //Скорость перемещения объектов по полю
+
 
             //Создание таймера, который запускает эвент с определенным интервалом
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
@@ -383,6 +400,13 @@ namespace Soko
 
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
+            if (currentMap.isWinnable()
+                &&(currentMap.chestRed.currentState == Creature.State.Idle)
+                &&(currentMap.chestBlue.currentState == Creature.State.Idle))
+            {
+                MessageBox.Show("Обе коробки доставлены! Поздравляем! Вы прошли карту!");
+                this.Close(); //Закрыть игру или вместо этого запустить новую карту
+            }
             //Если состояние игрока/сундука == "в движении", то изменять координаты ректангла в сторону движения
             if (currentMap.playerRed.currentState==Creature.State.Moving)
             {
@@ -542,10 +566,6 @@ namespace Soko
                 default:
                     //MessageBox.Show();
                     break;
-            }
-            if (currentMap.isWinnable())
-            {
-                MessageBox.Show("Обе коробки доставлены! Поздравляем! Вы прошли карту!");
             }
 
         }
