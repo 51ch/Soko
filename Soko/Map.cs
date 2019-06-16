@@ -11,10 +11,10 @@ namespace Soko
         private int height;
         private int width;
         public List<Cell> grid;
-        public Creature player1;
-        public Creature player2;
-        public Creature redCart;
-        public Creature blueCart;
+        public Creature playerRed;
+        public Creature playerBlue;
+        public Creature chestRed;
+        public Creature chestBlue;
 
         public int Height
         {
@@ -35,10 +35,10 @@ namespace Soko
             height = h;
             width = w;
             grid = new List<Cell>();
-            player1 = new Creature(0, 0);
-            player2 = new Creature(1, 0);
-            redCart = new Creature(0, 1);
-            blueCart = new Creature(1, 1);
+            playerRed = new Creature(0, 0);
+            playerBlue = new Creature(1, 0);
+            chestRed = new Creature(0, 1);
+            chestBlue = new Creature(1, 1);
             for (int rownumber=0; rownumber < height; rownumber++)
             {
                 for (int colnumber=0; colnumber < width; colnumber++)
@@ -46,10 +46,10 @@ namespace Soko
                     grid.Add(new Cell(colnumber, rownumber));
                 }
             }
-            GetCell(player1.xPos, player1.yPos).setObject(player1);
-            GetCell(player2.xPos, player2.yPos).setObject(player2);
-            GetCell(redCart.xPos, redCart.yPos).setObject(redCart);
-            GetCell(blueCart.xPos, blueCart.yPos).setObject(blueCart);
+            GetCell(playerRed.xPos, playerRed.yPos).setObject(playerRed);
+            GetCell(playerBlue.xPos, playerBlue.yPos).setObject(playerBlue);
+            GetCell(chestRed.xPos, chestRed.yPos).setObject(chestRed);
+            GetCell(chestBlue.xPos, chestBlue.yPos).setObject(chestBlue);
             GetCell(0, 2).Type = Cell.cellType.RedFinish;
             GetCell(1, 2).Type = Cell.cellType.BlueFinish;
         }
@@ -58,10 +58,10 @@ namespace Soko
             height = 28;
             width = 25;
             grid = new List<Cell>();
-            player1 = new Creature(2, 16);
-            player2 = new Creature(11, 16);
-            redCart = new Creature(9, 22);
-            blueCart = new Creature(5, 25);
+            playerRed = new Creature(2, 16);
+            playerBlue = new Creature(11, 16);
+            chestRed = new Creature(9, 22);
+            chestBlue = new Creature(5, 25);
 
             for (int rownumber = 0; rownumber < height; rownumber++)
             {
@@ -78,10 +78,10 @@ namespace Soko
                 GetCell(x, y).Type = Cell.cellType.Open;
             }
 
-            GetCell(player1.xPos, player1.yPos).setObject(player1);
-            GetCell(player2.xPos, player2.yPos).setObject(player2);
-            GetCell(redCart.xPos, redCart.yPos).setObject(redCart);
-            GetCell(blueCart.xPos, blueCart.yPos).setObject(blueCart);
+            GetCell(playerRed.xPos, playerRed.yPos).setObject(playerRed);
+            GetCell(playerBlue.xPos, playerBlue.yPos).setObject(playerBlue);
+            GetCell(chestRed.xPos, chestRed.yPos).setObject(chestRed);
+            GetCell(chestBlue.xPos, chestBlue.yPos).setObject(chestBlue);
             GetCell(23, 3).Type = Cell.cellType.RedFinish;
             GetCell(23, 4).Type = Cell.cellType.BlueFinish;
         }
@@ -114,7 +114,7 @@ namespace Soko
             Cell currentCell = GetCell(player.xPos, player.yPos);
             Cell nextCell = GetNearCell(currentCell, direction);
 
-            if (nextCell != null)
+            if ((nextCell != null)&&(player.currentState!=Creature.State.Moving))
             {
                 if ((nextCell.Type == Cell.cellType.Open) || 
                     (nextCell.Type == Cell.cellType.RedFinish)||
@@ -125,6 +125,7 @@ namespace Soko
                         MoveTo(nextCell.getObject(), direction);
                         if(!nextCell.isBusy)
                         {
+                            player.MovingTo(direction);
                             nextCell.setObject(player);
                             player.xPos = nextCell.xPos;
                             player.yPos = nextCell.yPos;
@@ -133,6 +134,7 @@ namespace Soko
                     }
                     else
                     {
+                        player.MovingTo(direction);
                         nextCell.setObject(player);
                         player.xPos = nextCell.xPos;
                         player.yPos = nextCell.yPos;
@@ -145,7 +147,7 @@ namespace Soko
         {
             Cell redCell = grid.Find(z => z.Type == Cell.cellType.RedFinish);
             Cell blueCell = grid.Find(z => z.Type == Cell.cellType.BlueFinish);
-            if (redCell.getObject() == redCart && blueCell.getObject() == blueCart)
+            if (redCell.getObject() == chestRed && blueCell.getObject() == chestBlue)
             {
                 return true;
             }

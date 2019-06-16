@@ -5,11 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Soko"
         mc:Ignorable="d"
-        Title="SokoGirls" Height="768" Width="1024" WindowState="Maximized">
+        Title="SokoGirls" Height="768" Width="1024" WindowState="Maximized" KeyDown="GameScreen_KeyDown">
     <Canvas x:Name="scene" Margin="0,0,0,0" MinWidth="100" MinHeight="100">
-        <UniformGrid x:Name="FieldGrid"/>
         <!--<Canvas.Background>
             <ImageBrush x:Name="bgBrush" ImageSource="tiles/wall.jpg" TileMode="Tile" ViewportUnits ="Absolute" Viewport="0, 0, 128, 128"/>
         </Canvas.Background>-->
     </Canvas>
+    
 </Window>

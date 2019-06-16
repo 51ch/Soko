@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -22,18 +23,157 @@ namespace Soko
     {
         Map currentMap;
         int cellSize;
+        UniformGrid FieldGrid;
+        ImageBrush ib_CloseCell;
+        ImageBrush ib_OpenCell;
+        ImageBrush ib_DeadEndCell;
+        ImageBrush ib_Player_Red;
+        ImageBrush ib_Player_Blue;
+        ImageBrush ib_Chest_Red;
+        ImageBrush ib_Chest_Blue;
+
+        Rectangle rect_Player_Red;
+        Rectangle rect_Player_Blue;
+        Rectangle rect_Chest_Red;
+        Rectangle rect_Chest_Blue;
+
+        int currentFrame_P1;
+        int currentRow_P1;
+        int currentFrame_P2;
+        int currentRow_P2;
+
+        int xPos_Player_Red;
+        int yPos_Player_Red;
+        int xPos_Player_Blue;
+        int yPos_Player_Blue;
+        int xPos_Chest_Red;
+        int yPos_Chest_Red;
+        int xPos_Chest_Blue;
+        int yPos_Chest_Blue;
+
+        int frameCount;
+        int gameSpeed;
+        int fps;
+        double charH;
+        double charW;
         public MainWindow()
         {
             InitializeComponent();
+            FieldGrid = new UniformGrid();
             currentMap = new Map(LoadMap());
             cellSize = CalculateCellSize();
+
+            //Создание кистей
+            ib_CloseCell = new ImageBrush();
+            ib_OpenCell = new ImageBrush();
+            ib_DeadEndCell = new ImageBrush();
+            ib_Player_Red = new ImageBrush();
+            ib_Player_Blue = new ImageBrush();
+            ib_Chest_Red = new ImageBrush();
+            ib_Chest_Blue = new ImageBrush();
+
+            //Создание ректанглов для отрисовки
+            rect_Player_Red = new Rectangle();
+            rect_Player_Blue = new Rectangle();
+            rect_Chest_Red = new Rectangle();
+            rect_Chest_Blue = new Rectangle();
+
+            //Указание источников изображения для кистей
+            ib_CloseCell.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/tiles/wall.jpg", UriKind.Absolute));
+            ib_OpenCell.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/tiles/floor.jpg", UriKind.Absolute));
+            ib_DeadEndCell.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/tiles/floor_stop.jpg", UriKind.Absolute));
+            ib_Player_Red.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/sprites/char_red.png", UriKind.Absolute));
+            ib_Player_Blue.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/sprites/char_blue.png", UriKind.Absolute));
+            ib_Chest_Red.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/sprites/chest_red.png", UriKind.Absolute));
+            ib_Chest_Blue.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/sprites/chest_blue.png", UriKind.Absolute));
+
+            //Размеры ректанглов равны размеру клеток
+            rect_Chest_Red.Height = cellSize;
+            rect_Chest_Red.Width = cellSize;
+            rect_Chest_Blue.Height = cellSize;
+            rect_Chest_Blue.Width = cellSize;
+            rect_Player_Red.Height = cellSize;
+            rect_Player_Red.Width = cellSize;
+            rect_Player_Blue.Height = cellSize;
+            rect_Player_Blue.Width = cellSize;
+
+            //Заполнение ректанглов изображением сундуков
+            rect_Chest_Red.Fill = ib_Chest_Red;
+            rect_Chest_Blue.Fill = ib_Chest_Blue;
+
+            //Размеры viewBox или размеры спрайта
+            charH = 64; //высота спрайта
+            charW = 64; //ширина спрайта
+            //Настройки кисти для анимации Красного Игрока
+            currentRow_P1 = 0;
+            currentFrame_P1 = 0;
+            ib_Player_Red.AlignmentX = AlignmentX.Left;
+            ib_Player_Red.AlignmentY = AlignmentY.Top;
+            ib_Player_Red.Stretch = Stretch.UniformToFill;
+            ib_Player_Red.ViewboxUnits = BrushMappingMode.Absolute;
+            ib_Player_Red.Viewbox = new Rect(charW * currentFrame_P1, charH * currentRow_P1, charW * (currentFrame_P1 + 1), charH * (currentRow_P1 + 1));
+            rect_Player_Red.Fill = ib_Player_Red;
+
+            //Настройки кисти для анимации Синего игрока
+            currentRow_P2 = 0;
+            currentFrame_P2 = 0;
+            ib_Player_Blue.AlignmentX = AlignmentX.Left;
+            ib_Player_Blue.AlignmentY = AlignmentY.Top;
+            ib_Player_Blue.Stretch = Stretch.UniformToFill;
+            ib_Player_Blue.ViewboxUnits = BrushMappingMode.Absolute;
+            ib_Player_Blue.Viewbox = new Rect(charW * currentFrame_P2, charH * currentRow_P2, charW * (currentFrame_P2 + 1), charH * (currentRow_P2 + 1));
+            rect_Player_Blue.Fill = ib_Player_Blue;
+
+            //Создание сетки и заполнение тайлами
             FieldGrid.Columns = currentMap.Width;
             FieldGrid.Rows = currentMap.Height;
-            FieldGrid.Width = cellSize;
-            FieldGrid.Height = cellSize;
-            //ImageBrush ib = new ImageBrush();
-            //ib.TileMode = TileMode.Tile;
-            //ib.ImageSource = new BitmapImage(new Uri(@"pack://application:,,,/tiles/wall.jpg", UriKind.Absolute)); 
+            FieldGrid.Width = cellSize * FieldGrid.Columns;
+            FieldGrid.Height = cellSize * FieldGrid.Rows;
+            foreach (Cell cell in currentMap.grid)
+            {
+                Rectangle rect = new Rectangle();
+                if (cell.Type == Cell.cellType.Open)
+                {
+                    rect.Fill = ib_OpenCell;
+                }
+                else if (cell.Type == Cell.cellType.DeadEnd)
+                {
+                    rect.Fill = ib_DeadEndCell;
+                }
+                else
+                {
+                    rect.Fill = ib_CloseCell;
+                }
+                FieldGrid.Children.Add(rect);
+            }
+            //Добавление объектов в сцену
+            scene.Children.Add(FieldGrid);
+            scene.Children.Add(rect_Chest_Red);
+            scene.Children.Add(rect_Chest_Blue);
+            scene.Children.Add(rect_Player_Red);
+            scene.Children.Add(rect_Player_Blue);
+
+            //Копирование текущих координат игровых объектов
+            xPos_Player_Red = currentMap.playerRed.xPos*cellSize;
+            yPos_Player_Red= currentMap.playerRed.yPos*cellSize;
+            xPos_Player_Blue = currentMap.playerBlue.xPos * cellSize;
+            yPos_Player_Blue = currentMap.playerBlue.yPos * cellSize;
+            xPos_Chest_Red = currentMap.chestRed.xPos * cellSize;
+            yPos_Chest_Red = currentMap.chestRed.yPos * cellSize;
+            xPos_Chest_Blue = currentMap.chestBlue.xPos * cellSize;
+            yPos_Chest_Blue = currentMap.chestBlue.yPos * cellSize;
+
+
+            //Настройки анимации
+            gameSpeed = 3; //Скорость перемещения объектов по полю
+            frameCount = 9; //Количество кадров анимации
+            fps = 9; //Количество обновлений объектов рендера в секунду
+
+            //Создание таймера, который запускает эвент с определенным интервалом
+            System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
+            dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 1000/fps);
+            dispatcherTimer.Start();
 
         }
         private int[,] LoadMap()
@@ -231,20 +371,184 @@ namespace Soko
             };
             return newMap;
         }
-        private int CalculateCellSize()
+
+        private int CalculateCellSize()  //Расчёт размера клетки исходя из размера экрана и количества клеток          
         {
             int newSize;
-            double cellHeight = (scene.ActualHeight) / (currentMap.Height);
-            double cellWidth = (scene.ActualWidth) / (currentMap.Width);
+            double cellHeight = (this.Height) / (currentMap.Height);
+            double cellWidth = (this.Width) / (currentMap.Width);
             newSize = Math.Min((int)cellHeight, (int)cellWidth);
             return newSize;
         }
 
-        private void GridResize()
+        private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
-            cellSize = CalculateCellSize();
-            FieldGrid.Width = cellSize;
-            FieldGrid.Height = cellSize;
+            //Если состояние игрока/сундука == "в движении", то изменять координаты ректангла в сторону движения
+            if (currentMap.playerRed.currentState==Creature.State.Moving)
+            {
+                switch (currentMap.playerRed.lastDirection)
+                {
+                    case Creature.Direction.Up:
+                        currentRow_P1 = 0;
+                        yPos_Player_Red -=  gameSpeed % (Math.Abs(yPos_Player_Red - currentMap.playerRed.yPos * cellSize) +1);
+                        break;
+                    case Creature.Direction.Left:
+                        currentRow_P1 = 1;
+                        xPos_Player_Red -= gameSpeed % (Math.Abs(xPos_Player_Red - currentMap.playerRed.xPos * cellSize) + 1);
+                        break;
+                    case Creature.Direction.Down:
+                        currentRow_P1 = 2;
+                        yPos_Player_Red += gameSpeed % (Math.Abs(yPos_Player_Red - currentMap.playerRed.yPos * cellSize) + 1);
+                        break;
+                    case Creature.Direction.Right:
+                        currentRow_P1 = 3;
+                        xPos_Player_Red += gameSpeed % (Math.Abs(xPos_Player_Red - currentMap.playerRed.xPos * cellSize) + 1);
+                        break;
+                    default:
+                        break;
+                }
+                currentFrame_P1 = (currentFrame_P1 + 1 + frameCount) % frameCount;
+            }
+            if (currentMap.playerBlue.currentState == Creature.State.Moving)
+            {
+                switch (currentMap.playerBlue.lastDirection)
+                {
+                    case Creature.Direction.Up:
+                        currentRow_P2 = 0;
+                        yPos_Player_Blue -= gameSpeed % (yPos_Player_Blue - currentMap.playerBlue.yPos * cellSize + 1);
+                        break;
+                    case Creature.Direction.Left:
+                        currentRow_P2 = 1;
+                        xPos_Player_Blue -= gameSpeed % (xPos_Player_Blue - currentMap.playerBlue.xPos * cellSize + 1);
+                        break;
+                    case Creature.Direction.Down:
+                        currentRow_P2 = 2;
+                        yPos_Player_Blue += gameSpeed % (currentMap.playerBlue.yPos * cellSize - yPos_Player_Blue + 1);
+                        break;
+                    case Creature.Direction.Right:
+                        currentRow_P2 = 3;
+                        xPos_Player_Blue += gameSpeed % (currentMap.playerBlue.xPos * cellSize - xPos_Player_Blue + 1);
+                        break;
+                    default:
+                        break;
+                }
+                currentFrame_P2 = (currentFrame_P2 + 1 + frameCount) % frameCount;
+            }
+            if (currentMap.chestRed.currentState == Creature.State.Moving)
+            {
+                switch (currentMap.chestRed.lastDirection)
+                {
+                    case Creature.Direction.Up:
+                        yPos_Chest_Red -= gameSpeed % (Math.Abs(yPos_Chest_Red - currentMap.chestRed.yPos * cellSize) + 1);
+                        break;
+                    case Creature.Direction.Left:
+                        xPos_Chest_Red -= gameSpeed % (Math.Abs(xPos_Chest_Red - currentMap.chestRed.xPos * cellSize) + 1);
+                        break;
+                    case Creature.Direction.Down:
+                        yPos_Chest_Red += gameSpeed % (Math.Abs(yPos_Chest_Red - currentMap.chestRed.yPos * cellSize) + 1);
+                        break;
+                    case Creature.Direction.Right:
+                        xPos_Chest_Red += gameSpeed % (Math.Abs(xPos_Chest_Red - currentMap.chestRed.xPos * cellSize) + 1);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (currentMap.chestBlue.currentState == Creature.State.Moving)
+            {
+                switch (currentMap.chestBlue.lastDirection)
+                {
+                    case Creature.Direction.Up:
+                        yPos_Chest_Blue -= gameSpeed % (Math.Abs(yPos_Chest_Blue - currentMap.chestBlue.yPos * cellSize) + 1);
+                        break;
+                    case Creature.Direction.Left:
+                        xPos_Chest_Blue -= gameSpeed % (Math.Abs(xPos_Chest_Blue - currentMap.chestBlue.xPos * cellSize) + 1);
+                        break;
+                    case Creature.Direction.Down:
+                        yPos_Chest_Blue += gameSpeed % (Math.Abs(yPos_Chest_Blue - currentMap.chestBlue.yPos * cellSize) + 1);
+                        break;
+                    case Creature.Direction.Right:
+                        xPos_Chest_Blue += gameSpeed % (Math.Abs(xPos_Chest_Blue - currentMap.chestBlue.xPos * cellSize) + 1);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            //Если координаты ректангла совпадают с координатами игрока/сундука, то состояние обозначить как "покой"
+            if (xPos_Player_Red == currentMap.playerRed.xPos * cellSize && yPos_Player_Red == currentMap.playerRed.yPos * cellSize)
+            {
+                currentMap.playerRed.Arrived();
+                currentFrame_P1 = 0;
+            }
+            if (xPos_Player_Blue == currentMap.playerBlue.xPos * cellSize && yPos_Player_Blue == currentMap.playerBlue.yPos * cellSize)
+            {
+                currentMap.playerBlue.Arrived();
+                currentFrame_P2 = 0;
+            }
+            if (xPos_Chest_Red == currentMap.chestRed.xPos * cellSize && yPos_Chest_Red == currentMap.chestRed.yPos * cellSize)
+            {
+                currentMap.chestRed.Arrived();
+            }
+            if (xPos_Chest_Blue == currentMap.chestBlue.xPos * cellSize && yPos_Chest_Blue == currentMap.chestBlue.yPos * cellSize)
+            {
+                currentMap.chestBlue.Arrived();
+            }
+
+            //Рендер ректангла на основе координат
+            rect_Player_Red.RenderTransform = new TranslateTransform(xPos_Player_Red, yPos_Player_Red);
+            rect_Player_Blue.RenderTransform = new TranslateTransform(xPos_Player_Blue, yPos_Player_Blue);
+            rect_Chest_Red.RenderTransform = new TranslateTransform(xPos_Chest_Red, yPos_Chest_Red);
+            rect_Chest_Blue.RenderTransform = new TranslateTransform(xPos_Chest_Blue, yPos_Chest_Blue);
+
+            //Изменение кадра анимации на основе номера строки и номера столбца
+            ib_Player_Red.Viewbox = new Rect(charW * currentFrame_P1, charH * currentRow_P1, charW * (currentFrame_P1 + 1), charH * (currentRow_P1 + 1));
+            ib_Player_Blue.Viewbox = new Rect(charW * currentFrame_P2, charH * currentRow_P2, charW * (currentFrame_P2 + 1), charH * (currentRow_P2 + 1));
+            rect_Player_Red.Fill = ib_Player_Red;
+            rect_Player_Blue.Fill = ib_Player_Blue;
         }
+
+        private void GameScreen_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case Key.W:
+                    currentMap.MoveTo(currentMap.playerRed, Creature.Direction.Up);
+                    break;
+                case Key.Up:
+                    currentMap.MoveTo(currentMap.playerBlue, Creature.Direction.Up);
+                    break;
+                case Key.A:
+                    currentMap.MoveTo(currentMap.playerRed, Creature.Direction.Left);
+                    break;
+                case Key.Left:
+                    currentMap.MoveTo(currentMap.playerBlue, Creature.Direction.Left);
+                    break;
+                case Key.S:
+                    currentMap.MoveTo(currentMap.playerRed, Creature.Direction.Down);
+                    break;
+                case Key.Down:
+                    currentMap.MoveTo(currentMap.playerBlue, Creature.Direction.Down);
+                    break;
+                case Key.D:
+                    currentMap.MoveTo(currentMap.playerRed, Creature.Direction.Right);
+                    break;
+                case Key.Right:
+                    currentMap.MoveTo(currentMap.playerBlue, Creature.Direction.Right);
+                    break;
+                case Key.R:
+                    //currentMap = new Map(LoadMap());
+                    break;
+                default:
+                    //MessageBox.Show();
+                    break;
+            }
+            if (currentMap.isWinnable())
+            {
+                MessageBox.Show("Обе коробки доставлены! Поздравляем! Вы прошли карту!");
+            }
+
+        }
+
     }
 }
